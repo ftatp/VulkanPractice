@@ -1,10 +1,7 @@
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
-#include <stdexcept>
-#include <vector>
 #include <iostream>
-
 #include "VulkanRenderer.h"
 
 GLFWwindow* window;
@@ -26,12 +23,16 @@ int main(){
     initWindow("Test window, 800, 600");
 
     //Create Vulkan Renderer instance
-    vulkanRenderer.init(window);
+    if(vulkanRenderer.init(window) == EXIT_FAILURE){
+        return EXIT_FAILURE;
+    }
 
     //Loop until close
     while(!glfwWindowShouldClose(window)){
         glfwPollEvents();
     }
+
+    vulkanRenderer.cleanUp();
 
     //Destroy window and stop GLFW
     glfwDestroyWindow(window);
