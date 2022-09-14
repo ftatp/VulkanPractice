@@ -5,7 +5,10 @@
 #include <vector>
 #include <iostream>
 
+#include "VulkanRenderer.h"
+
 GLFWwindow* window;
+VulkanRenderer vulkanRenderer;
 
 void initWindow(std::string wName = "Test", const int width = 800, const int height = 600){
     glfwInit();
@@ -21,6 +24,9 @@ int main(){
 
     //Create window
     initWindow("Test window, 800, 600");
+
+    //Create Vulkan Renderer instance
+    vulkanRenderer.init(window);
 
     //Loop until close
     while(!glfwWindowShouldClose(window)){
