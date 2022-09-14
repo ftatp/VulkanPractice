@@ -10,6 +10,7 @@ int VulkanRenderer::init(GLFWwindow* window){
     try{
         createInstance();
         getPhysicalDevice();
+        createLogicalDevice();
     }
     catch(const std::runtime_error e){
         printf("Error : %s\n", e.what());
@@ -18,6 +19,7 @@ int VulkanRenderer::init(GLFWwindow* window){
     return 0;
 }
 void VulkanRenderer::cleanUp(){
+    vkDestroyDevice(mainDevice.logicalDevice, nullptr);
     vkDestroyInstance(instance, nullptr);
 }
 
@@ -73,6 +75,43 @@ void VulkanRenderer::createInstance(){
     if(result != VK_SUCCESS){
         throw std::runtime_error("Failed to create instance");
     }
+}
+
+
+void VulkanRenderer::createLogicalDevice(){
+    //Get the queue familyindices for the chosen Physical device
+    QueueFamilyIndices indices = getQueueFamilies(mainDevice.physicalDevice);
+    
+    // Queue the logical device needs to create and info to do so
+    VkDeviceQueueCreateInfo queueCreateInfo = {};
+    queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+    queueCreateInfo.queueFamilyIndex = indices.graphicsFamily;                  // The index of the family to create a queue from 
+    queueCreateInfo.queueCount = 1;                                             // Numbers of queues to create
+    float priority = 1.0f;
+    queueCreateInfo.pQueuePriorities = &priority;                               // Vulkan needs to know how to handle multiple queus, so decide priority (1 = highest priority, 0 is lowest)
+
+    // Information to create logical device
+    VkDeviceCreateInfo deviceCreateInfo = {};
+    deviceCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+    deviceCreateInfo.queueCreateInfoCount = 1;                                  //The number of Queue create infos
+    deviceCreateInfo.pQueueCreateInfos = &queueCreateInfo;
+    deviceCreateInfo.enabledExtensionCount = 0;                                 // Number of enabled logical device extensions
+    deviceCreateInfo.ppEnabledExtensionNames = nullptr;                         // List of enabled logical device extensions
+    deviceCreateInfo.enabledLayerCount = 0;
+    
+    // Physical device features the logical device will be using
+    VkPhysicalDeviceFeatures deviceFeatures = {};
+    deviceCreateInfo.pEnabledFeatures = &deviceFeatures;                        // Physical device features logical device will use
+
+    // Cret the logical device for the given physical device
+    VkResult result = vkCreateDevice(mainDevice.physicalDevice, &deviceCreateInfo, nullptr, &mainDevice.logicalDevice);
+    if(result != VK_SUCCESS){
+        throw std::runtime_error("Failed to create a logical device");
+    }
+
+    // Queues are created at the same time as the deviceCreateInfo so we want to handle
+    
+    vkGetDeviceQueue(mainDevice.logicalDevice, indices.graphicsFamily,0, &graphicQueue);
 }
 
 void VulkanRenderer::getPhysicalDevice(){
